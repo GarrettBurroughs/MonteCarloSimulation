@@ -20,7 +20,8 @@ pub fn run() {
         .expect("Something went wrong")
         .as_millis()
         % 1000;
-    let mut simulation_rng = RandomNumberGenerator::new(seed as i64, 24693, 3517, i64::pow(2, 17));
+    // let mut simulation_rng = RandomNumberGenerator::new(seed as i64, 24693, 3517, i64::pow(2, 17));
+    let mut simulation_rng = RandomNumberGenerator::new_default();
     let mut calling_realizations: Vec<f64> = Vec::new();
     for _ in 1..50000 {
         let waiting_time = run_calling_process(&mut simulation_rng);
@@ -28,6 +29,10 @@ pub fn run() {
     }
     estimate_quantities(&mut calling_realizations);
     let saved = save_results(&mut calling_realizations, "results.csv");
+
+    if let Err(save_error) = saved {
+        eprintln!("{}", save_error);
+    }
 }
 
 pub fn run_calling_process(random_number_generator: &mut RandomNumberGenerator) -> f64 {

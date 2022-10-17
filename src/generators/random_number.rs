@@ -27,7 +27,7 @@ impl RandomNumberGenerator {
         x_i as f64 / self.modulus as f64
     }
 
-    pub fn new_detfault() -> RandomNumberGenerator {
+    pub fn new_default() -> RandomNumberGenerator {
         RandomNumberGenerator::new(1000, 24693, 3517, i64::pow(2, 17))
     }
 }
