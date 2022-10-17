@@ -1,3 +1,3 @@
-pub mod continuousRandomVariable;
-pub mod discreteRandomVariable;
-pub mod randomNumber;
+pub mod continuous_random_variable;
+pub mod discrete_random_variable;
+pub mod random_number;
