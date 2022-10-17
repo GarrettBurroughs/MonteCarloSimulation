@@ -23,7 +23,7 @@ pub fn run() {
     // let mut simulation_rng = RandomNumberGenerator::new(seed as i64, 24693, 3517, i64::pow(2, 17));
     let mut simulation_rng = RandomNumberGenerator::new_default();
     let mut calling_realizations: Vec<f64> = Vec::new();
-    for _ in 1..50000 {
+    for _ in 0..1000 {
         let waiting_time = run_calling_process(&mut simulation_rng);
         calling_realizations.push(waiting_time);
     }
@@ -51,7 +51,7 @@ pub fn run_calling_process(random_number_generator: &mut RandomNumberGenerator) 
     calling_process.get_total_time()
 }
 
-pub fn estimate_quantities(results: &mut Vec<f64>) {
+fn estimate_quantities(results: &mut Vec<f64>) {
     results.sort_by(|a, b| {
         if a > b {
             Ordering::Greater
@@ -75,9 +75,30 @@ pub fn estimate_quantities(results: &mut Vec<f64>) {
         "First Quartile: {}, Median: {}, Third Quartile: {}",
         first_quartile, median, third_quartile
     );
+    let p_less_15 = get_cdf(results, 15.0);
+    let p_less_20 = get_cdf(results, 20.0);
+    let p_less_30 = get_cdf(results, 30.0);
+    let p_greater_40 = 1.0 - get_cdf(results, 40.0);
+    let p_greater_w5 = 1.0 - get_cdf(results, 75.0);
+    let p_greater_w6 = 1.0 - get_cdf(results, 100.0);
+    let p_greater_w7 = 1.0 - get_cdf(results, 125.0);
+    println!(
+        "W <= 15: {}, W <= 20: {}, W <= 30: {}, W > 40: {}, W > 75: {}, W > 100: {}, W > 125: {}",
+        p_less_15, p_less_20, p_less_30, p_greater_40, p_greater_w5, p_greater_w6, p_greater_w7
+    );
 }
 
-pub fn save_results(results: &mut Vec<f64>, filename: &str) -> std::io::Result<()> {
+fn get_cdf(results: &Vec<f64>, value: f64) -> f32 {
+    let mut total_events = 0;
+    for result in results {
+        if *result <= value {
+            total_events += 1;
+        }
+    }
+    total_events as f32 / results.len() as f32
+}
+
+fn save_results(results: &Vec<f64>, filename: &str) -> std::io::Result<()> {
     let mut file = File::create(filename)?;
     for result in results {
         file.write(format!("{} \n", result).as_bytes())?;
