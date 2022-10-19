@@ -20,6 +20,7 @@ pub fn run() {
         .expect("Something went wrong")
         .as_millis()
         % 1000;
+    test_discrete_random_variable();
     // let mut simulation_rng = RandomNumberGenerator::new(seed as i64, 24693, 3517, i64::pow(2, 17));
     let mut simulation_rng = RandomNumberGenerator::new_default();
     let mut calling_realizations: Vec<f64> = Vec::new();
@@ -130,11 +131,11 @@ pub fn test_discrete_random_variable() {
         if x == 1.0 {
             0.1
         } else if x == 2.0 {
-            0.3
+            0.2
         } else if x == 3.0 {
-            0.7
+            0.4
         } else if x == 4.0 {
-            1.0
+            0.3
         } else {
             0.0
         }

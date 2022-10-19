@@ -27,11 +27,25 @@ where
 
     pub fn generate_realization(&mut self) -> f64 {
         let u_i = self.rng.get_next_number();
-        for i in &mut self.sample_space {
-            if (self.pmf)(*i) > u_i {
+        for i in &self.sample_space {
+            // TODO: Change to PDF calculation
+            if DiscreteRandomVariableGenerator::calculate_cdf(*i, &self.pmf, &self.sample_space)
+                > u_i
+            {
                 return *i;
             }
         }
         return -1.0;
+    }
+
+    fn calculate_cdf(x: f64, pmf: &T, sample_space: &Vec<f64>) -> f64 {
+        let mut cdf = 0f64;
+        for &y in sample_space {
+            if y > x {
+                break;
+            }
+            cdf += (pmf)(y);
+        }
+        return cdf;
     }
 }
