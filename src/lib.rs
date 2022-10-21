@@ -1,6 +1,7 @@
 mod calling_process;
 mod generators;
 
+use generators::continuous_random_variable::ContinuousRandomVariableGenerator;
 use generators::discrete_random_variable::DiscreteRandomVariableGenerator;
 use generators::random_number::RandomNumberGenerator;
 use std::time::UNIX_EPOCH;
@@ -14,7 +15,7 @@ use std::io::prelude::*;
 pub fn run() {
     println!("Starting simulation");
     test_random_number_generator();
-
+    test_continous_random_variable();
     let seed = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Something went wrong")
@@ -126,27 +127,49 @@ pub fn test_random_number_generator() {
 
 pub fn test_discrete_random_variable() {
     let mut rng = RandomNumberGenerator::new(1000, 24693, 3517, i64::pow(2, 17));
-    let pmf = |x: f64| -> f64 {
-        if x == 1.0 {
+    let pmf = |y: f64| -> f64 {
+        if y == 1.0 {
             0.1
-        } else if x == 2.0 {
+        } else if y == 2.0 {
             0.3
-        } else if x == 3.0 {
+        } else if y == 3.0 {
             0.7
-        } else if x == 4.0 {
+        } else if y == 4.0 {
             1.0
         } else {
             0.0
         }
     };
     let sample_space = vec![1.0, 2.0, 3.0, 4.0];
-    let mut random_variable_x = DiscreteRandomVariableGenerator::new(&mut rng, pmf, sample_space);
+    let mut random_variable_y = DiscreteRandomVariableGenerator::new(&mut rng, pmf, sample_space);
     let count = 10000;
     let mut reals = vec![0, 0, 0, 0];
     for _ in 0..count {
-        reals[(random_variable_x.generate_realization() - 1.0) as usize] += 1;
+        reals[(random_variable_y.generate_realization() - 1.0) as usize] += 1;
     }
     for i in 0..reals.len() {
-        println!("PMF of {}: {}", i + 1, reals[i] as f32 / count as f32);
+        println!("PMF of Y, {}: {}", i + 1, reals[i] as f32 / count as f32);
+    }
+}
+
+pub fn test_continous_random_variable() {
+    let cdf_of_exponential = |x: f64| -> f64 { 1.0 - f64::powf(std::f64::consts::E, -x / 12.0) };
+    let mut inverse_cdf = |x: f64| -> f64 { -12.0 * (1.0 - x).ln() };
+    let mut realizations: Vec<f64> = Vec::new();
+    let mut rng = RandomNumberGenerator::new_default();
+    let mut random_variable_z = ContinuousRandomVariableGenerator::new(&mut rng, &mut inverse_cdf);
+    for i in 0..10000 {
+        realizations.push(random_variable_z.generate_realization());
+        println!("{}", realizations[i]);
+    }
+
+    let test_vals = vec![1f64, 2f64, 6f64, 12f64, 24f64];
+    for test_val in test_vals {
+        println!(
+            "CDF of Z for {}, Expected: {}, Actual: {}",
+            test_val,
+            (cdf_of_exponential)(test_val),
+            get_cdf(&realizations, test_val)
+        );
     }
 }
