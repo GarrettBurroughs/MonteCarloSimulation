@@ -4,10 +4,10 @@ mod generators;
 use generators::continuous_random_variable::ContinuousRandomVariableGenerator;
 use generators::discrete_random_variable::DiscreteRandomVariableGenerator;
 use generators::random_number::RandomNumberGenerator;
-use std::time::UNIX_EPOCH;
+// use std::time::UNIX_EPOCH;
 
 use std::cmp::Ordering;
-use std::time::SystemTime;
+// use std::time::SystemTime;
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -15,12 +15,13 @@ use std::io::prelude::*;
 pub fn run() {
     println!("Starting simulation");
     test_random_number_generator();
-    test_continous_random_variable();
-    let seed = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Something went wrong")
-        .as_millis()
-        % 1000;
+    // test_continous_random_variable();
+    // let seed = SystemTime::now()
+    //     .duration_since(UNIX_EPOCH)
+    //     .expect("Something went wrong")
+    //     .as_millis()
+    //     % 1000;
+    // test_discrete_random_variable();
     // let mut simulation_rng = RandomNumberGenerator::new(seed as i64, 24693, 3517, i64::pow(2, 17));
     let mut simulation_rng = RandomNumberGenerator::new_default();
     let mut calling_realizations: Vec<f64> = Vec::new();
@@ -131,11 +132,11 @@ pub fn test_discrete_random_variable() {
         if y == 1.0 {
             0.1
         } else if y == 2.0 {
-            0.3
+            0.2
         } else if y == 3.0 {
-            0.7
+            0.4
         } else if y == 4.0 {
-            1.0
+            0.3
         } else {
             0.0
         }

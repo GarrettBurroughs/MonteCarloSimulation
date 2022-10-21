@@ -66,9 +66,9 @@ where
                     if x == 1.0 {
                         self.p_b as f64
                     } else if x == 2.0 {
-                        (self.p_u + self.p_b) as f64
+                        self.p_u as f64
                     } else if x == 3.0 {
-                        (self.p_a + self.p_u + self.p_b) as f64
+                        self.p_a as f64
                     } else {
                         0.0
                     }
