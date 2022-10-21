@@ -103,7 +103,7 @@ fn get_cdf(results: &Vec<f64>, value: f64) -> f32 {
 fn save_results(results: &Vec<f64>, filename: &str) -> std::io::Result<()> {
     let mut file = File::create(filename)?;
     for result in results {
-        file.write(format!("{} \n", result).as_bytes())?;
+        file.write(format!("{}, \n", result).as_bytes())?;
     }
     Ok(())
 }
