@@ -1,28 +1,21 @@
 mod calling_process;
 mod generators;
+mod large_numbers_sim;
 
 use generators::continuous_random_variable::ContinuousRandomVariableGenerator;
 use generators::discrete_random_variable::DiscreteRandomVariableGenerator;
 use generators::random_number::RandomNumberGenerator;
-// use std::time::UNIX_EPOCH;
+use large_numbers_sim::LawOfLargeNumbersSimulator;
+use std::collections::HashMap;
 
 use std::cmp::Ordering;
-// use std::time::SystemTime;
 
 use std::fs::File;
 use std::io::prelude::*;
 
-pub fn run() {
+pub fn mini_project_1() {
     println!("Starting simulation");
     test_random_number_generator();
-    // test_continous_random_variable();
-    // let seed = SystemTime::now()
-    //     .duration_since(UNIX_EPOCH)
-    //     .expect("Something went wrong")
-    //     .as_millis()
-    //     % 1000;
-    // test_discrete_random_variable();
-    // let mut simulation_rng = RandomNumberGenerator::new(seed as i64, 24693, 3517, i64::pow(2, 17));
     let mut simulation_rng = RandomNumberGenerator::new_default();
     let mut calling_realizations: Vec<f64> = Vec::new();
     for _ in 0..1000 {
@@ -30,11 +23,34 @@ pub fn run() {
         calling_realizations.push(waiting_time);
     }
     estimate_quantities(&mut calling_realizations);
-    let saved = save_results(&mut calling_realizations, "results.csv");
+    let saved = save_vector_results(&mut calling_realizations, "results.csv");
 
     if let Err(save_error) = saved {
         eprintln!("{}", save_error);
     }
+}
+
+pub fn mini_project_2() {
+    let t = 57f64;
+    let a = 1f64 / t;
+    let inverse_rayleigh_cdf = |u: f64| -> f64 { f64::sqrt((-2f64 * (1f64 - u).ln()) / (a * a)) };
+    let mut sim = LawOfLargeNumbersSimulator::new(
+        inverse_rayleigh_cdf,
+        vec![10, 30, 50, 100, 250, 500, 1000],
+        110,
+    );
+
+    let mut rng = RandomNumberGenerator::new(1000, 24693, 3967, i64::pow(2, 18));
+
+    let results = sim.simulate(&mut rng);
+    let filename = "coordinates.dat";
+    let res = save_coordinate_results(results, filename);
+    if let Err(_) = res {
+        eprintln!("Error saving coordinate file");
+    }
+    println!("Saved law of large numbers simulation to {}", filename);
+
+    let samples = vec![(3, 5), (9, 25), (27, 110), (81, 550)];
 }
 
 pub fn run_calling_process(random_number_generator: &mut RandomNumberGenerator) -> f64 {
@@ -100,10 +116,24 @@ fn get_cdf(results: &Vec<f64>, value: f64) -> f32 {
     total_events as f32 / results.len() as f32
 }
 
-fn save_results(results: &Vec<f64>, filename: &str) -> std::io::Result<()> {
+fn save_vector_results(results: &Vec<f64>, filename: &str) -> std::io::Result<()> {
     let mut file = File::create(filename)?;
     for result in results {
         file.write(format!("{}, \n", result).as_bytes())?;
+    }
+    Ok(())
+}
+
+fn save_coordinate_results(results: HashMap<i32, Vec<f64>>, filename: &str) -> std::io::Result<()> {
+    let mut file = File::create(filename)?;
+    file.write(format!("sample_size sample_mean \n").as_bytes())?;
+    for key in results.keys() {
+        results.get(key).unwrap().iter().for_each(|x| {
+            let res = file.write(format!("{} {} \n", key, x).as_bytes());
+            if let Err(e) = res {
+                eprintln!("Error writing to file");
+            }
+        });
     }
     Ok(())
 }
