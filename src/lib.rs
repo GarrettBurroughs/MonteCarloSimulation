@@ -7,11 +7,13 @@ use generators::discrete_random_variable::DiscreteRandomVariableGenerator;
 use generators::random_number::RandomNumberGenerator;
 use large_numbers_sim::LawOfLargeNumbersSimulator;
 use std::collections::HashMap;
+use std::env;
 
 use std::cmp::Ordering;
-
 use std::fs::File;
 use std::io::prelude::*;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 
 pub fn mini_project_1() {
     println!("Starting simulation");
@@ -39,8 +41,18 @@ pub fn mini_project_2() {
         vec![10, 30, 50, 100, 250, 500, 1000],
         110,
     );
-
-    let mut rng = RandomNumberGenerator::new(1000, 24693, 3967, i64::pow(2, 18));
+    let seed = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Something went wrong")
+        .as_millis()
+        % 1000;
+    let true_random = env::var("TRUE_RANDOM").is_ok();
+    let mut rng = RandomNumberGenerator::new(
+        if true_random { 1000 } else { seed as i64 },
+        24693,
+        3967,
+        i64::pow(2, 18),
+    );
 
     let results = sim.simulate(&mut rng);
     let filename = "coordinates.dat";
@@ -51,6 +63,63 @@ pub fn mini_project_2() {
     println!("Saved law of large numbers simulation to {}", filename);
 
     let samples = vec![(3, 5), (9, 25), (27, 110), (81, 550)];
+    let mut m: HashMap<i32, Vec<f64>> = HashMap::new();
+    for (n, k) in &samples {
+        m.insert(*n, Vec::new());
+        for _ in 0..*k {
+            let value = sim.sample_mean(&mut rng, *n as i32);
+            m.get_mut(n).unwrap().push(value);
+        }
+    }
+    let mut estimated_means: HashMap<i32, f64> = HashMap::new();
+    let mut estimated_variances: HashMap<i32, f64> = HashMap::new();
+
+    for (n, k) in &samples {
+        let mut sum: f64 = 0f64;
+        for i in 0..*k {
+            sum += m[n][i];
+        }
+        estimated_means.insert(*n, sum / *k as f64);
+    }
+
+    for (n, k) in &samples {
+        let mut var: f64 = 0f64;
+        for i in 0..*k {
+            var += f64::powi(m[n][i], 2) - f64::powi(estimated_means[n], 2);
+        }
+        estimated_variances.insert(*n, var / *k as f64);
+    }
+
+    println!(
+        "Sample Means: {:?} \n Sample Variances: {:?}",
+        estimated_means, estimated_variances
+    );
+
+    let mut standard_vars: HashMap<i32, Vec<f64>> = HashMap::new();
+    for (n, k) in &samples {
+        standard_vars.insert(*n, Vec::new());
+        for i in 0..*k {
+            let standardized = (m[n][i] - estimated_means[n]) / f64::sqrt(estimated_variances[n]);
+            standard_vars.get_mut(n).unwrap().push(standardized);
+        }
+    }
+    // println!("Standardized Variables: {:?}", standard_vars);
+    let z_set = vec![-1.4, -1.0, -0.5, 0.5, 1.0, 1.4];
+    let mut distributions: HashMap<i32, Vec<f64>> = HashMap::new();
+    for (n, k) in &samples {
+        distributions.insert(*n, Vec::new());
+        for z in &z_set {
+            let mut cdf = 0f64;
+            for value in &standard_vars[n] {
+                if value <= z {
+                    cdf += 1 as f64;
+                }
+            }
+            cdf /= standard_vars[n].len() as f64;
+            distributions.get_mut(n).unwrap().push(cdf);
+        }
+    }
+    println!("CDFS {:?}", distributions);
 }
 
 pub fn run_calling_process(random_number_generator: &mut RandomNumberGenerator) -> f64 {

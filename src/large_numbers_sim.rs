@@ -49,4 +49,18 @@ where
         }
         results
     }
+
+    pub fn sample_mean(
+        &mut self,
+        random_number_generator: &mut RandomNumberGenerator,
+        n: i32,
+    ) -> f64 {
+        let mut sample_sum = 0f64;
+        let mut random_variable =
+            ContinuousRandomVariableGenerator::new(random_number_generator, &mut self.inverse_pdf);
+        for _ in 0..n {
+            sample_sum += random_variable.generate_realization();
+        }
+        sample_sum / n as f64
+    }
 }
